@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>乙昌水箱行 - 叫貨系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 隱藏滾動條但保持可滾動 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 確保輸入框在手機上不會自動放大 */
+        input, select { font-size: 16px !important; }
+        
+        /* 畫面切換動畫 */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-100 flex justify-center h-screen w-screen overflow-hidden text-gray-800">
+
+    <!-- 模擬手機螢幕的容器 -->
+    <div class="w-full max-w-md h-full bg-white shadow-xl relative flex flex-col">
+        
+        <!-- 頂部導航列 -->
+        <header class="bg-blue-600 text-white p-4 shadow-md z-10 flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wider"><i class="fa-solid fa-water mr-2"></i>乙昌水箱</h1>
+            <div id="cart-badge-container" class="relative hidden cursor-pointer" onclick="goToStep(3)">
+                <i class="fa-solid fa-cart-shopping text-xl"></i>
+                <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">0</span>
+            </div>
+        </header>
+
+        <!-- 內容區域 -->
+        <main class="flex-1 overflow-y-auto no-scrollbar p-5 relative">
+            
+            <!-- Step 1: 登入/客戶資料 -->
+            <div id="step-1" class="fade-in block space-y-5 mt-4">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                        <i class="fa-solid fa-car-side text-3xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">歡迎使用叫貨系統</h2>
+                    <p class="text-gray-500 text-sm mt-1">請先填寫您的基本資料以開始選購</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">保養廠 / 公司名稱 <span class="text-red-500">*</span></label>
+                        <input type="text" id="company" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="例如：日盛保養廠">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">聯絡電話 <span class="text-red-500">*</span></label>
+                        <input type="tel" id="phone" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="例如：0912345678">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">電子信箱 (選填)</label>
+                        <input type="email" id="email" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="若有填寫，將會傳送訂單明細至此信箱">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">送貨地址 (選填)</label>
+                        <input type="text" id="address" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="例如：台北市中山區某某路1號">
+                    </div>
+                </div>
+
+                <button onclick="saveUserInfo()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-lg mt-8 shadow-md transition transform active:scale-95">
+                    開始叫貨 <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+
+            <!-- Step 2: 選貨頁面 -->
+            <div id="step-2" class="fade-in hidden space-y-5">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center">
+                        <button onclick="goToStep(1)" class="text-gray-500 hover:text-blue-600 mr-3 transition-colors">
+                            <i class="fa-solid fa-arrow-left text-lg"></i>
+                        </button>
+                        <h2 class="text-xl font-bold border-l-4 border-blue-600 pl-2">選擇車款與水箱</h2>
+                    </div>
+                    <span id="welcome-name" class="text-sm text-gray-500 font-medium"></span>
+                </div>
+
+                <!-- 動態下拉選單區 -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">1. 選擇廠牌</label>
+                        <select id="select-brand" onchange="onBrandChange()" class="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none">
+                            <option value="">請先選擇廠牌...</option>
+                            <!-- JS 動態生成 -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">2. 選擇車型</label>
+                        <select id="select-model" onchange="onModelChange()" disabled class="w-full border border-gray-300 rounded-lg p-3 bg-gray-100 text-gray-500 outline-none appearance-none disabled:opacity-70">
+                            <option value="">請先選擇廠牌</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">3. 選擇年份</label>
+                        <select id="select-year" onchange="onYearChange()" disabled class="w-full border border-gray-300 rounded-lg p-3 bg-gray-100 text-gray-500 outline-none appearance-none disabled:opacity-70">
+                            <option value="">請先選擇車型</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">4. 選擇材料種類</label>
+                        <select id="select-type" onchange="onTypeChange()" disabled class="w-full border border-gray-300 rounded-lg p-3 bg-gray-100 text-gray-500 outline-none appearance-none disabled:opacity-70">
+                            <option value="">請先選擇年份</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 產品資訊卡片 (選擇完畢後顯示) -->
+                <div id="product-card" class="hidden bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm transition-all mt-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <span id="p-id" class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded font-mono mb-1 inline-block"></span>
+                            <h3 id="p-spec" class="text-lg font-bold text-gray-800"></h3>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm text-gray-500">單價</span>
+                            <div id="p-price" class="text-xl font-bold text-blue-600"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 產品圖片區塊 -->
+                    <div id="p-image-container" class="hidden w-full h-48 bg-white rounded-lg mb-3 flex items-center justify-center overflow-hidden border border-blue-100 shadow-inner">
+                        <img id="p-image" src="" alt="產品圖片" class="max-h-full max-w-full object-contain">
+                    </div>
+
+                    <div class="flex items-center justify-between border-t border-blue-200 pt-3 mt-2">
+                        <div class="flex items-center">
+                            <i class="fa-solid fa-box-open text-gray-400 mr-2"></i>
+                            <span class="text-sm text-gray-600">目前庫存：</span>
+                            <span id="p-stock" class="font-bold text-lg mx-1"></span>
+                            <span class="text-sm text-gray-600">個</span>
+                        </div>
+                        
+                        <!-- 數量選擇 -->
+                        <div class="flex items-center bg-white border border-gray-300 rounded-lg overflow-hidden h-9">
+                            <button onclick="changeQty(-1)" class="w-9 h-full flex justify-center items-center bg-gray-100 hover:bg-gray-200 text-gray-600 transition active:bg-gray-300">-</button>
+                            <input type="number" id="order-qty" value="1" min="1" class="w-12 h-full text-center border-x border-gray-300 focus:outline-none font-bold text-gray-700" readonly>
+                            <button onclick="changeQty(1)" class="w-9 h-full flex justify-center items-center bg-gray-100 hover:bg-gray-200 text-gray-600 transition active:bg-gray-300">+</button>
+                        </div>
+                    </div>
+
+                    <button id="add-cart-btn" onclick="addToCart()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg mt-4 shadow transition transform active:scale-95 flex justify-center items-center">
+                        <i class="fa-solid fa-cart-plus mr-2"></i> 加入叫貨單
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: 購物車與結帳 -->
+            <div id="step-3" class="fade-in hidden space-y-4 pb-20">
+                <div class="flex items-center mb-4">
+                    <button onclick="goToStep(2)" class="text-gray-500 hover:text-blue-600 mr-3">
+                        <i class="fa-solid fa-arrow-left text-lg"></i>
+                    </button>
+                    <h2 class="text-xl font-bold">確認叫貨單</h2>
+                </div>
+
+                <!-- 叫貨清單 -->
+                <div id="cart-items" class="space-y-3">
+                    <!-- JS 動態生成購物車內容 -->
+                </div>
+
+                <!-- 總計區塊 -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mt-4">
+                    <div class="flex justify-between items-center text-gray-600 mb-2">
+                        <span>共計品項：</span>
+                        <span id="total-items" class="font-bold">0 件</span>
+                    </div>
+                    <div class="flex justify-between items-center text-lg">
+                        <span class="font-bold text-gray-800">總金額：</span>
+                        <span id="total-price" class="font-bold text-red-500 text-xl">$0</span>
+                    </div>
+                </div>
+
+                <!-- 客戶資訊確認 -->
+                <div class="bg-gray-50 p-4 rounded-xl text-sm border border-gray-200">
+                    <p class="text-gray-500 mb-1"><i class="fa-solid fa-building mr-1"></i> <span id="confirm-company"></span></p>
+                    <p class="text-gray-500 mb-1"><i class="fa-solid fa-map-location-dot mr-1"></i> 送貨地址：<br><strong id="confirm-address" class="text-gray-700"></strong></p>
+                    <p class="text-gray-500"><i class="fa-solid fa-envelope mr-1"></i> 電子信箱：<br><strong id="confirm-email" class="text-gray-700"></strong></p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 底部結帳按鈕 (固定在底部) -->
+        <div id="bottom-checkout" class="hidden absolute bottom-0 w-full bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+            <button onclick="submitOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 text-lg flex justify-center items-center">
+                <i class="fa-solid fa-paper-plane mr-2"></i> 確認送出訂單
+            </button>
+        </div>
+
+        <!-- 浮動按鈕：前往購物車 (在 Step 2 顯示) -->
+        <button id="float-cart-btn" onclick="goToStep(3)" class="hidden absolute bottom-6 right-6 bg-red-500 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transform transition hover:scale-105 active:scale-95 z-20">
+            <i class="fa-solid fa-file-invoice text-xl"></i>
+            <span id="float-badge" class="absolute top-0 right-0 bg-white text-red-500 text-xs font-bold px-1.5 py-0.5 rounded-full border border-red-500">0</span>
+        </button>
+
+        <!-- 客製化彈窗 (Modal) -->
+        <div id="custom-modal" class="hidden absolute inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6 transform transition-all scale-95 opacity-0" id="modal-content">
+                <div class="text-center mb-4">
+                    <div id="modal-icon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-3">
+                        <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl"></i>
+                    </div>
+                    <h3 id="modal-title" class="text-lg leading-6 font-medium text-gray-900">提示</h3>
+                    <div class="mt-2">
+                        <p id="modal-message" class="text-sm text-gray-500">訊息內容</p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:text-sm">
+                    確定
+                </button>
+            </div>
+        </div>
+        
+        <!-- 載入中遮罩 -->
+        <div id="loading-overlay" class="hidden absolute inset-0 bg-white bg-opacity-80 z-50 flex flex-col justify-center items-center">
+            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600 mb-3"></i>
+            <p class="text-gray-600 font-medium">訂單處理中，請稍候...</p>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 狀態管理 ---
+        let userInfo = { company: '', phone: '', address: '', email: '' };
+        let cart = [];
+        let currentStep = 1;
+        let selectedProduct = null;
+        let inventoryData = []; 
+
+        // --- GAS API 網址 (已更新為您的真實網址) ---
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwOF2ZJerpBzTyJB6qwxVvmR2AW32Jbl2HEOuU2ZK46cw2BGnEKkWL_K9fCFhp7L8KAOA/exec';
+        
+        // --- 備用模擬資料 (如果後台沒有資料，或是連線失敗時顯示) ---
+        const mockInventoryData = [
+            { id: "R-001", brand: "TOYOTA", model: "ALTIS", year: "2018-2022", type: "水箱", spec: "雙排鋁製水箱", image: "https://placehold.co/400x300/dbeafe/1e3a8a?text=水箱圖片\n(範例)", stock: 15, price: 2500 },
+            { id: "C-001", brand: "TOYOTA", model: "ALTIS", year: "2018-2022", type: "壓縮機", spec: "原廠翻修壓縮機", image: "https://placehold.co/400x300/f3e8ff/581c87?text=壓縮機圖片\n(範例)", stock: 3, price: 6500 },
+            { id: "P-001", brand: "TOYOTA", model: "ALTIS", year: "2018-2022", type: "冷排", spec: "高效散熱冷排", image: "", stock: 8, price: 1800 },
+            { id: "R-004", brand: "HONDA", model: "CR-V", year: "2017-2023", type: "水箱", spec: "原廠型水箱", image: "", stock: 0, price: 2800 },
+            { id: "E-001", brand: "HONDA", model: "CR-V", year: "2017-2023", type: "風箱仁", spec: "原廠型風箱仁", image: "", stock: 5, price: 2200 },
+        ];
+
+        // --- 初始化 ---
+        window.onload = () => {
+            // 顯示載入中遮罩
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.querySelector('#loading-overlay p').innerText = '載入最新庫存中...';
+
+            if (API_URL.startsWith('http')) {
+                // 呼叫 Google Sheets API
+                fetch(API_URL)
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.length === 0) {
+                            // 如果後台還沒建資料，先用假資料
+                            console.log("後台暫無資料，載入測試用模擬資料。");
+                            inventoryData = mockInventoryData;
+                        } else {
+                            // 將後台中文欄位對應到前端程式碼所需的變數名稱
+                            inventoryData = data.map(row => ({
+                                id: row['系統編號'],
+                                brand: row['廠牌'],
+                                model: row['車型'],
+                                year: row['年份'],
+                                type: row['材料種類'] || '水箱', // 材料種類
+                                spec: row['水箱規格'],
+                                image: row['圖片網址'] || '', // 圖片網址
+                                stock: parseInt(row['目前庫存量']) || 0,
+                                price: parseInt(row['單價']) || 0
+                            }));
+                        }
+
+                        populateBrands(); 
+                        
+                        document.getElementById('loading-overlay').classList.add('hidden');
+                        document.querySelector('#loading-overlay p').innerText = '訂單處理中，請稍候...';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching data:', error);
+                        document.getElementById('loading-overlay').classList.add('hidden');
+                        showModal('連線失敗', '無法取得最新庫存，請確認您已正確填入 GAS 網址。', 'warning');
+                        // 連線失敗時退回使用假資料測試
+                        inventoryData = mockInventoryData;
+                        populateBrands();
+                    });
+            } else {
+                console.log("尚未填寫真實 GAS 網址，載入測試用模擬資料。");
+                inventoryData = mockInventoryData;
+                setTimeout(() => {
+                    populateBrands();
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    document.querySelector('#loading-overlay p').innerText = '訂單處理中，請稍候...';
+                }, 500);
+            }
+        };
+
+        // --- UI 控制邏輯 ---
+        function goToStep(step) {
+            if (step === 3 && cart.length === 0) {
+                showModal('購物車是空的', '請先選擇需要的商品加入叫貨單。', 'warning');
+                return;
+            }
+
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.add('hidden');
+            document.getElementById('step-3').classList.add('hidden');
+            
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+            document.getElementById(`step-${step}`).classList.add('fade-in');
+
+            currentStep = step;
+            updateUIElements();
+
+            if (step === 3) renderCart();
+        }
+
+        function updateUIElements() {
+            const cartBadgeContainer = document.getElementById('cart-badge-container');
+            const floatCartBtn = document.getElementById('float-cart-btn');
+            const bottomCheckout = document.getElementById('bottom-checkout');
+
+            if (currentStep > 1) {
+                cartBadgeContainer.classList.remove('hidden');
+            } else {
+                cartBadgeContainer.classList.add('hidden');
+            }
+
+            if (currentStep === 2 && cart.length > 0) {
+                floatCartBtn.classList.remove('hidden');
+                bottomCheckout.classList.add('hidden');
+            } else if (currentStep === 3) {
+                floatCartBtn.classList.add('hidden');
+                bottomCheckout.classList.remove('hidden');
+            } else {
+                floatCartBtn.classList.add('hidden');
+                bottomCheckout.classList.add('hidden');
+            }
+        }
+
+        // --- Step 1: 儲存客戶資料 ---
+        function saveUserInfo() {
+            const company = document.getElementById('company').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            if (!company || !phone) {
+                showModal('資料不完整', '請填寫公司名稱與電話，以便我們聯繫與安排出貨。', 'warning');
+                return;
+            }
+            
+            if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+                showModal('Email 格式錯誤', '請輸入正確的電子信箱格式。', 'warning');
+                return;
+            }
+
+            userInfo = { company, phone, address, email };
+            
+            document.getElementById('welcome-name').innerText = company;
+            document.getElementById('confirm-company').innerText = company + ' (' + phone + ')';
+            document.getElementById('confirm-address').innerText = address ? address : '(未提供，將以電話聯繫確認)';
+            document.getElementById('confirm-email').innerText = email ? email : '(未提供)';
+
+            goToStep(2);
+        }
+
+        // --- Step 2: 動態下拉選單邏輯 ---
+        function getUniqueValues(key, filterFn = () => true) {
+            return [...new Set(inventoryData.filter(filterFn).map(item => item[key]))];
+        }
+
+        function populateBrands() {
+            const brands = getUniqueValues('brand');
+            const select = document.getElementById('select-brand');
+            select.innerHTML = '<option value="">請選擇廠牌...</option>';
+            brands.forEach(b => select.innerHTML += `<option value="${b}">${b}</option>`);
+        }
+
+        function onBrandChange() {
+            const brand = document.getElementById('select-brand').value;
+            const modelSelect = document.getElementById('select-model');
+            const yearSelect = document.getElementById('select-year');
+            const typeSelect = document.getElementById('select-type');
+            hideProductCard();
+
+            if (!brand) {
+                modelSelect.disabled = true;
+                modelSelect.innerHTML = '<option value="">請先選擇廠牌</option>';
+                modelSelect.classList.replace('bg-white', 'bg-gray-100');
+                yearSelect.disabled = true;
+                yearSelect.innerHTML = '<option value="">請先選擇車型</option>';
+                yearSelect.classList.replace('bg-white', 'bg-gray-100');
+                typeSelect.disabled = true;
+                typeSelect.innerHTML = '<option value="">請先選擇年份</option>';
+                typeSelect.classList.replace('bg-white', 'bg-gray-100');
+                return;
+            }
+
+            const models = getUniqueValues('model', item => item.brand === brand);
+            modelSelect.innerHTML = '<option value="">請選擇車型...</option>';
+            models.forEach(m => modelSelect.innerHTML += `<option value="${m}">${m}</option>`);
+            
+            modelSelect.disabled = false;
+            modelSelect.classList.replace('bg-gray-100', 'bg-white');
+            
+            yearSelect.disabled = true;
+            yearSelect.innerHTML = '<option value="">請先選擇車型</option>';
+            yearSelect.classList.replace('bg-white', 'bg-gray-100');
+            
+            typeSelect.disabled = true;
+            typeSelect.innerHTML = '<option value="">請先選擇年份</option>';
+            typeSelect.classList.replace('bg-white', 'bg-gray-100');
+        }
+
+        function onModelChange() {
+            const brand = document.getElementById('select-brand').value;
+            const model = document.getElementById('select-model').value;
+            const yearSelect = document.getElementById('select-year');
+            const typeSelect = document.getElementById('select-type');
+            hideProductCard();
+
+            if (!model) {
+                yearSelect.disabled = true;
+                yearSelect.innerHTML = '<option value="">請先選擇車型</option>';
+                yearSelect.classList.replace('bg-white', 'bg-gray-100');
+                typeSelect.disabled = true;
+                typeSelect.innerHTML = '<option value="">請先選擇年份</option>';
+                typeSelect.classList.replace('bg-white', 'bg-gray-100');
+                return;
+            }
+
+            const years = getUniqueValues('year', item => item.brand === brand && item.model === model);
+            yearSelect.innerHTML = '<option value="">請選擇年份...</option>';
+            years.forEach(y => yearSelect.innerHTML += `<option value="${y}">${y}</option>`);
+            
+            yearSelect.disabled = false;
+            yearSelect.classList.replace('bg-gray-100', 'bg-white');
+            
+            typeSelect.disabled = true;
+            typeSelect.innerHTML = '<option value="">請先選擇年份</option>';
+            typeSelect.classList.replace('bg-white', 'bg-gray-100');
+        }
+
+        function onYearChange() {
+            const brand = document.getElementById('select-brand').value;
+            const model = document.getElementById('select-model').value;
+            const year = document.getElementById('select-year').value;
+            const typeSelect = document.getElementById('select-type');
+            hideProductCard();
+
+            if (!year) {
+                typeSelect.disabled = true;
+                typeSelect.innerHTML = '<option value="">請先選擇年份</option>';
+                typeSelect.classList.replace('bg-white', 'bg-gray-100');
+                return;
+            }
+
+            const types = getUniqueValues('type', item => item.brand === brand && item.model === model && item.year === year);
+            typeSelect.innerHTML = '<option value="">請選擇材料種類...</option>';
+            types.forEach(t => typeSelect.innerHTML += `<option value="${t}">${t}</option>`);
+            
+            typeSelect.disabled = false;
+            typeSelect.classList.replace('bg-gray-100', 'bg-white');
+        }
+
+        function onTypeChange() {
+            const brand = document.getElementById('select-brand').value;
+            const model = document.getElementById('select-model').value;
+            const year = document.getElementById('select-year').value;
+            const type = document.getElementById('select-type').value;
+
+            if (brand && model && year && type) {
+                const product = inventoryData.find(p => p.brand === brand && p.model === model && p.year === year && p.type === type);
+                if (product) {
+                    showProductCard(product);
+                }
+            } else {
+                hideProductCard();
+            }
+        }
+
+        // --- 顯示產品與數量選擇 ---
+        function showProductCard(product) {
+            selectedProduct = product;
+            document.getElementById('product-card').classList.remove('hidden');
+            document.getElementById('product-card').classList.add('fade-in');
+            
+            document.getElementById('p-id').innerText = product.id;
+            document.getElementById('p-spec').innerText = product.spec;
+            document.getElementById('p-price').innerText = `$${product.price.toLocaleString()}`;
+            
+            // 處理圖片顯示邏輯
+            const imgContainer = document.getElementById('p-image-container');
+            const imgEl = document.getElementById('p-image');
+            if (product.image) {
+                imgEl.src = product.image;
+                imgContainer.classList.remove('hidden');
+            } else {
+                imgEl.src = '';
+                imgContainer.classList.add('hidden');
+            }
+            
+            const stockEl = document.getElementById('p-stock');
+            const btnEl = document.getElementById('add-cart-btn');
+            
+            stockEl.innerText = product.stock;
+            document.getElementById('order-qty').value = 1;
+
+            if (product.stock <= 0) {
+                stockEl.classList.add('text-red-500');
+                btnEl.disabled = true;
+                btnEl.classList.replace('bg-blue-600', 'bg-gray-400');
+                btnEl.classList.replace('hover:bg-blue-700', 'hover:bg-gray-400');
+                btnEl.innerHTML = '<i class="fa-solid fa-ban mr-2"></i> 目前缺貨中';
+            } else {
+                stockEl.classList.remove('text-red-500');
+                btnEl.disabled = false;
+                btnEl.classList.replace('bg-gray-400', 'bg-blue-600');
+                btnEl.classList.replace('hover:bg-gray-400', 'hover:bg-blue-700');
+                btnEl.innerHTML = '<i class="fa-solid fa-cart-plus mr-2"></i> 加入叫貨單';
+            }
+        }
+
+        function hideProductCard() {
+            selectedProduct = null;
+            document.getElementById('product-card').classList.add('hidden');
+        }
+
+        function changeQty(delta) {
+            if (!selectedProduct || selectedProduct.stock <= 0) return;
+            const input = document.getElementById('order-qty');
+            let newVal = parseInt(input.value) + delta;
+            
+            const MAX_QTY = 6; // 設定上限為 6
+            const limit = Math.min(selectedProduct.stock, MAX_QTY); 
+            
+            if (newVal < 1) newVal = 1;
+            
+            if (newVal > limit) {
+                if (selectedProduct.stock < MAX_QTY) {
+                    showModal('庫存不足', `目前 ${selectedProduct.spec} 最多僅有 ${selectedProduct.stock} 個庫存。`, 'info');
+                } else {
+                    showModal('數量限制', `為了確保大家都能叫到貨，每種品項單次最多只能訂購 ${MAX_QTY} 個喔。`, 'info');
+                }
+                newVal = limit;
+            }
+            
+            input.value = newVal;
+        }
+
+        // --- 加入購物車 ---
+        function addToCart() {
+            if (!selectedProduct || selectedProduct.stock <= 0) return;
+            
+            const qty = parseInt(document.getElementById('order-qty').value);
+            const MAX_QTY = 6; 
+            
+            const existingItem = cart.find(item => item.product.id === selectedProduct.id);
+            if (existingItem) {
+                const limit = Math.min(selectedProduct.stock, MAX_QTY);
+                
+                if (existingItem.qty + qty > limit) {
+                    if (selectedProduct.stock < MAX_QTY && existingItem.qty + qty > selectedProduct.stock) {
+                        showModal('超出庫存', `您購物車內已有該商品，合計數量超出現有庫存 (${selectedProduct.stock})。`, 'warning');
+                    } else {
+                        showModal('數量限制', `您購物車內已有該商品，每種品項合計最多只能訂購 ${MAX_QTY} 個。`, 'warning');
+                    }
+                    return;
+                }
+                existingItem.qty += qty;
+            } else {
+                cart.push({ product: selectedProduct, qty: qty });
+            }
+
+            updateCartBadges();
+            showModal('加入成功', `已將 ${qty} 個 ${selectedProduct.spec} 加入叫貨單。`, 'success');
+            
+            setTimeout(() => {
+                document.getElementById('select-brand').value = '';
+                onBrandChange();
+                updateUIElements();
+            }, 500);
+        }
+
+        function updateCartBadges() {
+            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('cart-badge').innerText = totalItems;
+            document.getElementById('float-badge').innerText = totalItems;
+        }
+
+        // --- Step 3: 渲染購物車 ---
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            
+            let totalPrice = 0;
+            let totalQty = 0;
+
+            cart.forEach((item, index) => {
+                const subtotal = item.product.price * item.qty;
+                totalPrice += subtotal;
+                totalQty += item.qty;
+
+                // 判斷是否有圖片，顯示縮圖或預設圖示
+                const imgHtml = item.product.image 
+                    ? `<img src="${item.product.image}" class="w-16 h-16 object-cover rounded-lg border border-gray-200 mr-3 shrink-0">`
+                    : `<div class="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 mr-3 flex items-center justify-center shrink-0"><i class="fa-solid fa-image text-gray-300"></i></div>`;
+
+                container.innerHTML += `
+                    <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                        <div class="flex items-center flex-1 overflow-hidden">
+                            ${imgHtml}
+                            <div class="min-w-0">
+                                <div class="text-xs text-gray-500 mb-1 truncate">${item.product.brand} ${item.product.model} (${item.product.year}) - <span class="text-blue-600 font-bold">${item.product.type}</span></div>
+                                <div class="font-bold text-gray-800 truncate">${item.product.spec}</div>
+                                <div class="text-sm text-blue-600 mt-1">$${item.product.price.toLocaleString()} x ${item.qty}</div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end ml-2 shrink-0">
+                            <div class="font-bold text-gray-800 mb-2">$${subtotal.toLocaleString()}</div>
+                            <button onclick="removeFromCart(${index})" class="text-xs text-red-500 bg-red-50 px-2 py-1 rounded hover:bg-red-100">
+                                <i class="fa-solid fa-trash-can mr-1"></i> 移除
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('total-items').innerText = `${totalQty} 件`;
+            document.getElementById('total-price').innerText = `$${totalPrice.toLocaleString()}`;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartBadges();
+            if (cart.length === 0) {
+                goToStep(2); 
+            } else {
+                renderCart();
+            }
+        }
+
+        // --- 送出訂單 ---
+        function submitOrder() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+
+            const orderPayload = {
+                userInfo: userInfo,
+                cart: cart.map(c => ({
+                    id: c.product.id,
+                    spec: c.product.spec,
+                    qty: c.qty,
+                    price: c.product.price,
+                    subtotal: c.product.price * c.qty
+                })),
+                total: cart.reduce((sum, c) => sum + (c.product.price * c.qty), 0),
+                timestamp: new Date().toISOString()
+            };
+
+            if (API_URL.startsWith('http') && !API_URL.includes('你的_GAS_網頁應用程式網址_請貼在這裡')) {
+                // 真實的 POST 請求 (傳送給 Google Apps Script)
+                // 若有 CORS 問題，可將 mode 設定為 'no-cors'，但通常不設定即可取得 JSON 回應
+                fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(orderPayload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    
+                    if (data.success) {
+                        let successMsg = '我們已收到您的叫貨單，稍後將為您安排出貨。';
+                        if (userInfo.email) {
+                            successMsg = `我們已收到您的叫貨單，訂單明細已發送至您的信箱 (${userInfo.email})，請查收！稍後將為您安排出貨。`;
+                        }
+                        showModal('訂單送出成功！', successMsg, 'success');
+                        resetAfterSubmit();
+                    } else {
+                        showModal('發生錯誤', '系統處理訂單時發生問題：' + data.error, 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    showModal('連線失敗', '訂單無法送出，請檢查網路連線。', 'warning');
+                });
+
+            } else {
+                // 模擬網路請求 (測試用)
+                setTimeout(() => {
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    
+                    let successMsg = '(此為測試模式) 我們已收到您的叫貨單，稍後將為您安排出貨。';
+                    if (userInfo.email) {
+                        successMsg = `(此為測試模式) 我們已收到叫貨單！\n真實環境下，系統會自動將明細發送至：\n${userInfo.email}`;
+                    }
+                    showModal('訂單送出成功！', successMsg, 'success');
+                    
+                    resetAfterSubmit();
+                }, 2000);
+            }
+        }
+
+        // 送出訂單後的重置動作
+        function resetAfterSubmit() {
+            cart = [];
+            updateCartBadges();
+            document.getElementById('select-brand').value = '';
+            onBrandChange();
+            
+            setTimeout(() => {
+                closeModal();
+                goToStep(1);
+                document.getElementById('company').value = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('address').value = '';
+                document.getElementById('email').value = '';
+            }, 3000);
+        }
+
+        // --- 客製化 Modal 系統 ---
+        function showModal(title, message, type = 'info') {
+            const modal = document.getElementById('custom-modal');
+            const content = document.getElementById('modal-content');
+            const iconEl = document.getElementById('modal-icon');
+            
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            
+            if (type === 'warning') {
+                iconEl.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-3 text-yellow-600';
+                iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-xl"></i>';
+            } else if (type === 'success') {
+                iconEl.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-3 text-green-600';
+                iconEl.innerHTML = '<i class="fa-solid fa-check text-xl"></i>';
+            } else {
+                iconEl.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-3 text-blue-600';
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-info text-xl"></i>';
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('custom-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+    </script>
+</body>
+</html>
