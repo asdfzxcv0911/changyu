@@ -24,7 +24,7 @@
     <!-- 模擬手機螢幕的容器 -->
     <div class="w-full max-w-md h-full bg-white shadow-xl relative flex flex-col">
         
-        <!-- 頂部導航列 (移除原本的購物車icon，移到下方導航) -->
+        <!-- 頂部導航列 -->
         <header class="bg-blue-600 text-white p-4 shadow-md z-10 flex justify-between items-center">
             <h1 class="text-xl font-bold tracking-wider"><i class="fa-solid fa-water mr-2"></i>乙昌水箱</h1>
         </header>
@@ -107,7 +107,7 @@
                     </div>
                 </div>
 
-                <!-- 產品資訊卡片 (選擇完畢後顯示) -->
+                <!-- 產品資訊卡片 -->
                 <div id="product-card" class="hidden bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm transition-all mt-4">
                     <div class="flex justify-between items-start mb-3">
                         <div>
@@ -120,7 +120,6 @@
                         </div>
                     </div>
                     
-                    <!-- 產品圖片區塊 -->
                     <div id="p-image-container" class="hidden w-full h-48 bg-white rounded-lg mb-3 flex items-center justify-center overflow-hidden border border-blue-100 shadow-inner">
                         <img id="p-image" src="" alt="產品圖片" class="max-h-full max-w-full object-contain">
                     </div>
@@ -133,7 +132,6 @@
                             <span class="text-sm text-gray-600">個</span>
                         </div>
                         
-                        <!-- 數量選擇 -->
                         <div class="flex items-center bg-white border border-gray-300 rounded-lg overflow-hidden h-9">
                             <button onclick="changeQty(-1)" class="w-9 h-full flex justify-center items-center bg-gray-100 hover:bg-gray-200 text-gray-600 transition active:bg-gray-300">-</button>
                             <input type="number" id="order-qty" value="1" min="1" class="w-12 h-full text-center border-x border-gray-300 focus:outline-none font-bold text-gray-700" readonly>
@@ -156,12 +154,9 @@
                     <h2 class="text-xl font-bold">確認叫貨單</h2>
                 </div>
 
-                <!-- 叫貨清單 -->
                 <div id="cart-items" class="space-y-3">
-                    <!-- JS 動態生成購物車內容 -->
                 </div>
 
-                <!-- 總計區塊 -->
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mt-4">
                     <div class="flex justify-between items-center text-gray-600 mb-2">
                         <span>共計品項：</span>
@@ -173,20 +168,18 @@
                     </div>
                 </div>
 
-                <!-- 客戶資訊確認 -->
                 <div class="bg-gray-50 p-4 rounded-xl text-sm border border-gray-200 mb-6">
                     <p class="text-gray-500 mb-1"><i class="fa-solid fa-building mr-1"></i> <span id="confirm-company"></span></p>
                     <p class="text-gray-500 mb-1"><i class="fa-solid fa-map-location-dot mr-1"></i> 送貨地址：<br><strong id="confirm-address" class="text-gray-700"></strong></p>
                     <p class="text-gray-500"><i class="fa-solid fa-envelope mr-1"></i> 電子信箱：<br><strong id="confirm-email" class="text-gray-700"></strong></p>
                 </div>
 
-                <!-- 將送出按鈕移入頁面底部，取代原本的懸浮設計 -->
                 <button onclick="submitOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 text-lg flex justify-center items-center">
                     <i class="fa-solid fa-paper-plane mr-2"></i> 確認送出訂單
                 </button>
             </div>
 
-            <!-- Step 4: 歷史紀錄 (新增的佔位頁面) -->
+            <!-- Step 4: 歷史紀錄 -->
             <div id="step-4" class="fade-in hidden space-y-5 h-full flex flex-col items-center justify-center text-center pb-20 mt-10">
                 <div class="w-20 h-20 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mb-4 mx-auto">
                     <i class="fa-solid fa-person-digging text-3xl"></i>
@@ -197,7 +190,7 @@
 
         </main>
 
-        <!-- 底部導航列 (Tab Bar) -->
+        <!-- 底部導航列 -->
         <nav class="bg-white border-t border-gray-200 flex justify-around items-center pt-2 pb-3 shadow-[0_-4px_10px_rgba(0,0,0,0.03)] z-30">
             <button onclick="goToStep(1)" id="tab-1" class="flex flex-col items-center p-1 text-blue-600 w-1/4 transition-colors">
                 <i class="fa-solid fa-house text-xl mb-1"></i>
@@ -226,12 +219,12 @@
                         <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl"></i>
                     </div>
                     <h3 id="modal-title" class="text-lg leading-6 font-medium text-gray-900">提示</h3>
-                    <div class="mt-2">
-                        <p id="modal-message" class="text-sm text-gray-500">訊息內容</p>
+                    <div class="mt-2 text-left bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <p id="modal-message" class="text-sm text-gray-600 break-words whitespace-pre-wrap">訊息內容</p>
                     </div>
                 </div>
                 <button onclick="closeModal()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:text-sm">
-                    確定
+                    我知道了
                 </button>
             </div>
         </div>
@@ -252,77 +245,81 @@
         let selectedProduct = null;
         let inventoryData = []; 
 
-        // --- GAS API 網址 (已更新為您的真實網址) ---
+        // ⚠️ 您的後台網址
         const API_URL = 'https://script.google.com/macros/s/AKfycbwOF2ZJerpBzTyJB6qwxVvmR2AW32Jbl2HEOuU2ZK46cw2BGnEKkWL_K9fCFhp7L8KAOA/exec';
         
-        // --- 備用模擬資料 (如果後台沒有資料，或是連線失敗時顯示) ---
         const mockInventoryData = [
-            { id: "R-001", brand: "TOYOTA", model: "ALTIS", year: "2018-2022", type: "水箱", spec: "雙排鋁製水箱", image: "https://placehold.co/400x300/dbeafe/1e3a8a?text=水箱圖片\n(範例)", stock: 15, price: 2500 },
-            { id: "C-001", brand: "TOYOTA", model: "ALTIS", year: "2018-2022", type: "壓縮機", spec: "原廠翻修壓縮機", image: "https://placehold.co/400x300/f3e8ff/581c87?text=壓縮機圖片\n(範例)", stock: 3, price: 6500 },
-            { id: "P-001", brand: "TOYOTA", model: "ALTIS", year: "2018-2022", type: "冷排", spec: "高效散熱冷排", image: "", stock: 8, price: 1800 },
-            { id: "R-004", brand: "HONDA", model: "CR-V", year: "2017-2023", type: "水箱", spec: "原廠型水箱", image: "", stock: 0, price: 2800 },
-            { id: "E-001", brand: "HONDA", model: "CR-V", year: "2017-2023", type: "風箱仁", spec: "原廠型風箱仁", image: "", stock: 5, price: 2200 },
+            { id: "R-001", brand: "TOYOTA", model: "ALTIS", year: "2018-2022", type: "水箱", spec: "雙排鋁製水箱", image: "", stock: 15, price: 2500 },
+            { id: "R-004", brand: "HONDA", model: "CR-V", year: "2017-2023", type: "水箱", spec: "原廠型水箱", image: "", stock: 0, price: 2800 }
         ];
 
-        // --- 初始化 (完美零等待體驗) ---
-        // 使用 DOMContentLoaded 讓網頁一秒載入，不等待外部圖片和字體
+        // --- 初始化 (加入深層除錯與強制排毒) ---
         document.addEventListener('DOMContentLoaded', () => {
-            const cachedData = localStorage.getItem('yichang_inventory_cache');
+            // 【關鍵步驟 1】：強制清除瀏覽器的舊暫存，避免被假資料卡住
+            localStorage.removeItem('yichang_inventory_cache');
+            console.log("快取已強制清除！");
 
-            // 1. 嘗試讀取快取 (瞬間載入)
-            if (cachedData) {
-                try {
-                    inventoryData = JSON.parse(cachedData);
-                    populateBrands();
-                } catch(e) {
-                    console.error("快取解析失敗", e);
-                }
-            }
+            // 先用模擬資料墊檔，確保畫面絕對有東西顯示
+            inventoryData = mockInventoryData;
+            populateBrands();
 
-            // 2. 完全不阻擋畫面！讓客人立刻開始在首頁打字填資料
-            // 同時在背景偷偷去跟 Google Sheets 拿最新資料
+            // 【關鍵步驟 2】：開始從 Google Sheets 抓取最新資料
             if (API_URL.startsWith('http')) {
                 fetch(API_URL)
-                    .then(response => response.json())
-                    .then(data => {
-                        if(data.length > 0) {
-                            // 轉換最新資料
-                            inventoryData = data.map(row => ({
-                                id: row['系統編號'],
-                                brand: row['廠牌'],
-                                model: row['車型'],
-                                year: row['年份'],
-                                type: row['材料種類'] || '水箱',
-                                spec: row['水箱規格'],
-                                image: row['圖片網址'] || '',
-                                stock: parseInt(row['目前庫存量']) || 0,
-                                price: parseInt(row['單價']) || 0
-                            }));
-                            
-                            // 更新手機快取
-                            localStorage.setItem('yichang_inventory_cache', JSON.stringify(inventoryData));
-                            
-                            // 聰明更新：只有當客人「還沒開始選廠牌」時，才去更新下拉選單，絕對不打斷客人的操作
-                            const currentBrand = document.getElementById('select-brand').value;
-                            if (!currentBrand) {
-                                populateBrands();
+                    .then(response => response.text()) // 這裡改為先抓純文字，防止 Google 傳回登入網頁導致死當
+                    .then(text => {
+                        try {
+                            const data = JSON.parse(text); // 嘗試解析成 JSON 資料
+
+                            if (data && data.length > 0 && data[0].error) {
+                                showModal('後台設定錯誤 (代碼 A)', 'Google 試算表回傳錯誤訊息：\n' + data[0].error + '\n\n👉 請檢查試算表底下的分頁名稱是否為「庫存總表」，不能有空白字元！', 'warning');
+                                return;
                             }
+
+                            if(data && data.length > 0) {
+                                if (data[0]['系統編號'] === undefined) {
+                                    const currentHeaders = Object.keys(data[0]).join(', ');
+                                    showModal('標題名稱錯誤 (代碼 B)', '找不到「系統編號」這個標題！\n\n👉 試算表目前的標題是：\n' + currentHeaders + '\n\n請去試算表檢查標題，確認前後沒有多按到空白鍵。', 'warning');
+                                    return;
+                                }
+
+                                const newData = data.filter(row => row['系統編號']).map(row => ({
+                                    id: String(row['系統編號']).trim(),
+                                    brand: String(row['廠牌']).trim(),
+                                    model: String(row['車型']).trim(),
+                                    year: String(row['年份']).trim(),
+                                    type: row['材料種類'] ? String(row['材料種類']).trim() : '水箱',
+                                    spec: String(row['水箱規格']).trim(),
+                                    image: row['圖片網址'] || '',
+                                    stock: parseInt(row['目前庫存量']) || 0,
+                                    price: parseInt(row['單價']) || 0
+                                }));
+                                
+                                if (newData.length > 0) {
+                                    inventoryData = newData; // 成功替換成真實資料
+                                    populateBrands(); // 重新整理下拉選單
+                                    
+                                    // 【關鍵步驟 3】：成功抓到資料，跳出綠色勾勾提示！
+                                    showModal('連線成功 🎉', `已成功從您的 Google 後台抓取 ${newData.length} 筆最新庫存資料！您可以開始測試了。`, 'success');
+                                }
+                            } else {
+                                showModal('試算表空白 (代碼 C)', '已成功連線後台，但「庫存總表」裡面完全沒有填寫水箱資料喔！', 'info');
+                            }
+                        } catch (e) {
+                            // 【關鍵防呆】如果這裡發生錯誤，代表 Google 傳回的不是資料，而是「要求登入的網頁」！
+                            console.error("解析失敗，收到的內容為:", text.substring(0, 150) + "...");
+                            showModal('權限設定錯誤 (代碼 E)', 'Google 擋住了連線並要求登入！(回傳了網頁而不是資料)\n\n👉 這 100% 是因為您在部署時沒有設定好權限。\n\n請回到 Apps Script：\n1. 點選「管理部署作業」\n2. 編輯並選擇「新版本」\n3. 【誰可以存取】一定要改成【所有人 (Anyone)】\n4. 點擊部署。', 'warning');
                         }
                     })
                     .catch(error => {
-                        console.error('背景取得最新庫存失敗:', error);
-                        // 失敗時不干擾畫面，避免驚嚇客人
+                        console.error('連線失敗:', error);
+                        showModal('後台連線遭阻擋 (代碼 D)', '無法連線到 Google 後台取得最新資料！\n\n可能原因：網址填錯或網路不穩。', 'warning');
                     });
-            } else {
-                console.log("尚未填寫真實 GAS 網址，載入測試用模擬資料。");
-                inventoryData = mockInventoryData;
-                populateBrands();
             }
         });
 
         // --- UI 控制邏輯 ---
         function goToStep(step) {
-            // 進入非首頁前，強制檢查並儲存客戶資料
             if (step > 1) {
                 const company = document.getElementById('company').value.trim();
                 const phone = document.getElementById('phone').value.trim();
@@ -331,15 +328,14 @@
 
                 if (!company || !phone) {
                     showModal('資料不完整', '請先在首頁填寫您的「保養廠名稱」與「聯絡電話」，才能開始找水箱與叫貨喔！', 'warning');
-                    return; // 阻擋切換頁面
+                    return; 
                 }
                 
                 if (email && !/^\S+@\S+\.\S+$/.test(email)) {
                     showModal('Email 格式錯誤', '請輸入正確的電子信箱格式。', 'warning');
-                    return; // 阻擋切換頁面
+                    return; 
                 }
 
-                // 資料檢查通過，自動儲存並更新介面
                 userInfo = { company, phone, address, email };
                 document.getElementById('welcome-name').innerText = company;
                 document.getElementById('confirm-company').innerText = company + ' (' + phone + ')';
@@ -352,7 +348,6 @@
                 return;
             }
 
-            // 切換分頁邏輯
             document.getElementById('step-1').classList.add('hidden');
             document.getElementById('step-2').classList.add('hidden');
             document.getElementById('step-3').classList.add('hidden');
@@ -368,7 +363,6 @@
         }
 
         function updateUIElements() {
-            // 更新底部導航列的顏色狀態
             for (let i = 1; i <= 4; i++) {
                 const tab = document.getElementById(`tab-${i}`);
                 if (tab) {
@@ -508,7 +502,6 @@
             document.getElementById('p-spec').innerText = product.spec;
             document.getElementById('p-price').innerText = `$${product.price.toLocaleString()}`;
             
-            // 處理圖片顯示邏輯
             const imgContainer = document.getElementById('p-image-container');
             const imgEl = document.getElementById('p-image');
             if (product.image) {
@@ -550,7 +543,7 @@
             const input = document.getElementById('order-qty');
             let newVal = parseInt(input.value) + delta;
             
-            const MAX_QTY = 6; // 設定上限為 6
+            const MAX_QTY = 6; 
             const limit = Math.min(selectedProduct.stock, MAX_QTY); 
             
             if (newVal < 1) newVal = 1;
@@ -627,7 +620,6 @@
                 totalPrice += subtotal;
                 totalQty += item.qty;
 
-                // 判斷是否有圖片，顯示縮圖或預設圖示
                 const imgHtml = item.product.image 
                     ? `<img src="${item.product.image}" class="w-16 h-16 object-cover rounded-lg border border-gray-200 mr-3 shrink-0">`
                     : `<div class="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 mr-3 flex items-center justify-center shrink-0"><i class="fa-solid fa-image text-gray-300"></i></div>`;
@@ -668,7 +660,6 @@
 
         // --- 送出訂單 ---
         function submitOrder() {
-            // 自動儲存當前輸入框的值 (客人不用按儲存也能結帳)
             userInfo.company = document.getElementById('company').value.trim();
             userInfo.phone = document.getElementById('phone').value.trim();
             userInfo.address = document.getElementById('address').value.trim();
@@ -692,10 +683,10 @@
                 userInfo: userInfo,
                 cart: cart.map(c => ({
                     id: c.product.id,
-                    brand: c.product.brand, // 新增：廠牌
-                    model: c.product.model, // 新增：車型
-                    year: c.product.year,   // 新增：年份
-                    type: c.product.type,   // 新增：材料種類
+                    brand: c.product.brand, 
+                    model: c.product.model, 
+                    year: c.product.year,   
+                    type: c.product.type,   
                     spec: c.product.spec,
                     qty: c.qty,
                     price: c.product.price,
@@ -706,8 +697,6 @@
             };
 
             if (API_URL.startsWith('http') && !API_URL.includes('你的_GAS_網頁應用程式網址_請貼在這裡')) {
-                // 真實的 POST 請求 (傳送給 Google Apps Script)
-                // 若有 CORS 問題，可將 mode 設定為 'no-cors'，但通常不設定即可取得 JSON 回應
                 fetch(API_URL, {
                     method: 'POST',
                     body: JSON.stringify(orderPayload)
@@ -734,7 +723,6 @@
                 });
 
             } else {
-                // 模擬網路請求 (測試用)
                 setTimeout(() => {
                     document.getElementById('loading-overlay').classList.add('hidden');
                     
@@ -749,7 +737,6 @@
             }
         }
 
-        // 送出訂單後的重置動作
         function resetAfterSubmit() {
             cart = [];
             updateCartBadges();
