@@ -24,17 +24,13 @@
     <!-- 模擬手機螢幕的容器 -->
     <div class="w-full max-w-md h-full bg-white shadow-xl relative flex flex-col">
         
-        <!-- 頂部導航列 -->
+        <!-- 頂部導航列 (移除原本的購物車icon，移到下方導航) -->
         <header class="bg-blue-600 text-white p-4 shadow-md z-10 flex justify-between items-center">
             <h1 class="text-xl font-bold tracking-wider"><i class="fa-solid fa-water mr-2"></i>乙昌水箱</h1>
-            <div id="cart-badge-container" class="relative hidden cursor-pointer" onclick="goToStep(3)">
-                <i class="fa-solid fa-cart-shopping text-xl"></i>
-                <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">0</span>
-            </div>
         </header>
 
         <!-- 內容區域 -->
-        <main class="flex-1 overflow-y-auto no-scrollbar p-5 relative">
+        <main class="flex-1 overflow-y-auto no-scrollbar p-5 relative pb-6">
             
             <!-- Step 1: 登入/客戶資料 -->
             <div id="step-1" class="fade-in block space-y-5 mt-4">
@@ -65,7 +61,7 @@
                     </div>
                 </div>
 
-                <button onclick="saveUserInfo()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-lg mt-8 shadow-md transition transform active:scale-95">
+                <button onclick="goToStep(2)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-lg mt-8 shadow-md transition transform active:scale-95">
                     開始叫貨 <i class="fa-solid fa-arrow-right ml-1"></i>
                 </button>
             </div>
@@ -178,27 +174,49 @@
                 </div>
 
                 <!-- 客戶資訊確認 -->
-                <div class="bg-gray-50 p-4 rounded-xl text-sm border border-gray-200">
+                <div class="bg-gray-50 p-4 rounded-xl text-sm border border-gray-200 mb-6">
                     <p class="text-gray-500 mb-1"><i class="fa-solid fa-building mr-1"></i> <span id="confirm-company"></span></p>
                     <p class="text-gray-500 mb-1"><i class="fa-solid fa-map-location-dot mr-1"></i> 送貨地址：<br><strong id="confirm-address" class="text-gray-700"></strong></p>
                     <p class="text-gray-500"><i class="fa-solid fa-envelope mr-1"></i> 電子信箱：<br><strong id="confirm-email" class="text-gray-700"></strong></p>
                 </div>
+
+                <!-- 將送出按鈕移入頁面底部，取代原本的懸浮設計 -->
+                <button onclick="submitOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 text-lg flex justify-center items-center">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> 確認送出訂單
+                </button>
+            </div>
+
+            <!-- Step 4: 歷史紀錄 (新增的佔位頁面) -->
+            <div id="step-4" class="fade-in hidden space-y-5 h-full flex flex-col items-center justify-center text-center pb-20 mt-10">
+                <div class="w-20 h-20 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mb-4 mx-auto">
+                    <i class="fa-solid fa-person-digging text-3xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-700">歷史紀錄功能開發中</h2>
+                <p class="text-gray-500 text-sm mt-2">未來您將可以在這裡<br>快速查看所有歷史叫貨明細！</p>
             </div>
 
         </main>
 
-        <!-- 底部結帳按鈕 (固定在底部) -->
-        <div id="bottom-checkout" class="hidden absolute bottom-0 w-full bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
-            <button onclick="submitOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 text-lg flex justify-center items-center">
-                <i class="fa-solid fa-paper-plane mr-2"></i> 確認送出訂單
+        <!-- 底部導航列 (Tab Bar) -->
+        <nav class="bg-white border-t border-gray-200 flex justify-around items-center pt-2 pb-3 shadow-[0_-4px_10px_rgba(0,0,0,0.03)] z-30">
+            <button onclick="goToStep(1)" id="tab-1" class="flex flex-col items-center p-1 text-blue-600 w-1/4 transition-colors">
+                <i class="fa-solid fa-house text-xl mb-1"></i>
+                <span class="text-[10px] font-bold">首頁</span>
             </button>
-        </div>
-
-        <!-- 浮動按鈕：前往購物車 (在 Step 2 顯示) -->
-        <button id="float-cart-btn" onclick="goToStep(3)" class="hidden absolute bottom-6 right-6 bg-red-500 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transform transition hover:scale-105 active:scale-95 z-20">
-            <i class="fa-solid fa-file-invoice text-xl"></i>
-            <span id="float-badge" class="absolute top-0 right-0 bg-white text-red-500 text-xs font-bold px-1.5 py-0.5 rounded-full border border-red-500">0</span>
-        </button>
+            <button onclick="goToStep(2)" id="tab-2" class="flex flex-col items-center p-1 text-gray-400 hover:text-blue-500 w-1/4 transition-colors">
+                <i class="fa-solid fa-magnifying-glass text-xl mb-1"></i>
+                <span class="text-[10px] font-bold">找水箱</span>
+            </button>
+            <button onclick="goToStep(3)" id="tab-3" class="flex flex-col items-center p-1 text-gray-400 hover:text-blue-500 w-1/4 transition-colors relative">
+                <i class="fa-solid fa-bag-shopping text-xl mb-1"></i>
+                <span class="text-[10px] font-bold">清單</span>
+                <span id="nav-cart-badge" class="absolute top-0 right-4 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden border border-white">0</span>
+            </button>
+            <button onclick="goToStep(4)" id="tab-4" class="flex flex-col items-center p-1 text-gray-400 hover:text-blue-500 w-1/4 transition-colors">
+                <i class="fa-solid fa-clock-rotate-left text-xl mb-1"></i>
+                <span class="text-[10px] font-bold">紀錄</span>
+            </button>
+        </nav>
 
         <!-- 客製化彈窗 (Modal) -->
         <div id="custom-modal" class="hidden absolute inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
@@ -302,14 +320,41 @@
 
         // --- UI 控制邏輯 ---
         function goToStep(step) {
+            // 進入非首頁前，強制檢查並儲存客戶資料
+            if (step > 1) {
+                const company = document.getElementById('company').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const address = document.getElementById('address').value.trim();
+                const email = document.getElementById('email').value.trim();
+
+                if (!company || !phone) {
+                    showModal('資料不完整', '請先在首頁填寫您的「保養廠名稱」與「聯絡電話」，才能開始找水箱與叫貨喔！', 'warning');
+                    return; // 阻擋切換頁面
+                }
+                
+                if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+                    showModal('Email 格式錯誤', '請輸入正確的電子信箱格式。', 'warning');
+                    return; // 阻擋切換頁面
+                }
+
+                // 資料檢查通過，自動儲存並更新介面
+                userInfo = { company, phone, address, email };
+                document.getElementById('welcome-name').innerText = company;
+                document.getElementById('confirm-company').innerText = company + ' (' + phone + ')';
+                document.getElementById('confirm-address').innerText = address ? address : '(未提供，將以電話聯繫確認)';
+                document.getElementById('confirm-email').innerText = email ? email : '(未提供)';
+            }
+
             if (step === 3 && cart.length === 0) {
-                showModal('購物車是空的', '請先選擇需要的商品加入叫貨單。', 'warning');
+                showModal('購物車是空的', '請先選擇需要的商品加入清單。', 'warning');
                 return;
             }
 
+            // 切換分頁邏輯
             document.getElementById('step-1').classList.add('hidden');
             document.getElementById('step-2').classList.add('hidden');
             document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('step-4').classList.add('hidden');
             
             document.getElementById(`step-${step}`).classList.remove('hidden');
             document.getElementById(`step-${step}`).classList.add('fade-in');
@@ -321,53 +366,19 @@
         }
 
         function updateUIElements() {
-            const cartBadgeContainer = document.getElementById('cart-badge-container');
-            const floatCartBtn = document.getElementById('float-cart-btn');
-            const bottomCheckout = document.getElementById('bottom-checkout');
-
-            if (currentStep > 1) {
-                cartBadgeContainer.classList.remove('hidden');
-            } else {
-                cartBadgeContainer.classList.add('hidden');
+            // 更新底部導航列的顏色狀態
+            for (let i = 1; i <= 4; i++) {
+                const tab = document.getElementById(`tab-${i}`);
+                if (tab) {
+                    if (i === currentStep) {
+                        tab.classList.remove('text-gray-400');
+                        tab.classList.add('text-blue-600');
+                    } else {
+                        tab.classList.remove('text-blue-600');
+                        tab.classList.add('text-gray-400');
+                    }
+                }
             }
-
-            if (currentStep === 2 && cart.length > 0) {
-                floatCartBtn.classList.remove('hidden');
-                bottomCheckout.classList.add('hidden');
-            } else if (currentStep === 3) {
-                floatCartBtn.classList.add('hidden');
-                bottomCheckout.classList.remove('hidden');
-            } else {
-                floatCartBtn.classList.add('hidden');
-                bottomCheckout.classList.add('hidden');
-            }
-        }
-
-        // --- Step 1: 儲存客戶資料 ---
-        function saveUserInfo() {
-            const company = document.getElementById('company').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const address = document.getElementById('address').value.trim();
-            const email = document.getElementById('email').value.trim();
-
-            if (!company || !phone) {
-                showModal('資料不完整', '請填寫公司名稱與電話，以便我們聯繫與安排出貨。', 'warning');
-                return;
-            }
-            
-            if (email && !/^\S+@\S+\.\S+$/.test(email)) {
-                showModal('Email 格式錯誤', '請輸入正確的電子信箱格式。', 'warning');
-                return;
-            }
-
-            userInfo = { company, phone, address, email };
-            
-            document.getElementById('welcome-name').innerText = company;
-            document.getElementById('confirm-company').innerText = company + ' (' + phone + ')';
-            document.getElementById('confirm-address').innerText = address ? address : '(未提供，將以電話聯繫確認)';
-            document.getElementById('confirm-email').innerText = email ? email : '(未提供)';
-
-            goToStep(2);
         }
 
         // --- Step 2: 動態下拉選單邏輯 ---
@@ -579,7 +590,7 @@
             }
 
             updateCartBadges();
-            showModal('加入成功', `已將 ${qty} 個 ${selectedProduct.spec} 加入叫貨單。`, 'success');
+            showModal('加入成功', `已將 ${qty} 個 ${selectedProduct.spec} 加入清單。`, 'success');
             
             setTimeout(() => {
                 document.getElementById('select-brand').value = '';
@@ -590,8 +601,15 @@
 
         function updateCartBadges() {
             const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-            document.getElementById('cart-badge').innerText = totalItems;
-            document.getElementById('float-badge').innerText = totalItems;
+            const navBadge = document.getElementById('nav-cart-badge');
+            
+            navBadge.innerText = totalItems;
+            
+            if (totalItems > 0) {
+                navBadge.classList.remove('hidden');
+            } else {
+                navBadge.classList.add('hidden');
+            }
         }
 
         // --- Step 3: 渲染購物車 ---
@@ -648,6 +666,24 @@
 
         // --- 送出訂單 ---
         function submitOrder() {
+            // 自動儲存當前輸入框的值 (客人不用按儲存也能結帳)
+            userInfo.company = document.getElementById('company').value.trim();
+            userInfo.phone = document.getElementById('phone').value.trim();
+            userInfo.address = document.getElementById('address').value.trim();
+            userInfo.email = document.getElementById('email').value.trim();
+
+            if (!userInfo.company || !userInfo.phone) {
+                showModal('資料不完整', '請先至「首頁」填寫您的保養廠名稱與聯絡電話，以便為您安排出貨！', 'warning');
+                goToStep(1);
+                return;
+            }
+
+            if (cart.length === 0) {
+                showModal('購物車是空的', '請先選擇需要的商品加入清單。', 'warning');
+                goToStep(2);
+                return;
+            }
+
             document.getElementById('loading-overlay').classList.remove('hidden');
 
             const orderPayload = {
