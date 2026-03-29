@@ -654,6 +654,10 @@
                 userInfo: userInfo,
                 cart: cart.map(c => ({
                     id: c.product.id,
+                    brand: c.product.brand, // 新增：廠牌
+                    model: c.product.model, // 新增：車型
+                    year: c.product.year,   // 新增：年份
+                    type: c.product.type,   // 新增：材料種類
                     spec: c.product.spec,
                     qty: c.qty,
                     price: c.product.price,
