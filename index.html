@@ -64,6 +64,20 @@
                 <button onclick="goToStep(2)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-lg mt-8 shadow-md transition transform active:scale-95">
                     開始叫貨 <i class="fa-solid fa-arrow-right ml-1"></i>
                 </button>
+
+                <!-- 新增：服務專員聯絡資訊 -->
+                <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                    <p class="text-xs text-gray-500 mb-3"><i class="fa-solid fa-circle-info mr-1 text-gray-400"></i> 遇到問題或需查詢進度？</p>
+                    <div class="text-sm font-bold text-gray-700 mb-3"><i class="fa-solid fa-headset mr-1 text-blue-600"></i> 服務專員 莊小姐</div>
+                    <div class="flex flex-col space-y-2 px-2">
+                        <a href="tel:073729477" class="w-full inline-flex items-center justify-center bg-blue-50 border border-blue-100 text-blue-700 px-5 py-2.5 rounded-full font-bold shadow-sm hover:bg-blue-100 transition active:scale-95 text-sm">
+                            <i class="fa-solid fa-phone mr-2"></i> 07-3729477
+                        </a>
+                        <a href="tel:0989251296" class="w-full inline-flex items-center justify-center bg-blue-50 border border-blue-100 text-blue-700 px-5 py-2.5 rounded-full font-bold shadow-sm hover:bg-blue-100 transition active:scale-95 text-sm">
+                            <i class="fa-solid fa-mobile-screen mr-2"></i> 0989-251296
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <!-- Step 2: 選貨頁面 -->
@@ -174,6 +188,12 @@
                     <p class="text-gray-500"><i class="fa-solid fa-envelope mr-1"></i> 電子信箱：<br><strong id="confirm-email" class="text-gray-700"></strong></p>
                 </div>
 
+                <!-- 新增：備註欄 -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><i class="fa-solid fa-pen-to-square mr-1 text-gray-400"></i> 訂單備註 (選填)</label>
+                    <textarea id="order-remarks" rows="2" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none text-sm" placeholder="有什麼想特別交代的嗎？(例如：請於下午配送、需打統編等)"></textarea>
+                </div>
+
                 <button onclick="submitOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 text-lg flex justify-center items-center">
                     <i class="fa-solid fa-paper-plane mr-2"></i> 確認送出訂單
                 </button>
@@ -239,7 +259,7 @@
 
     <script>
         // --- 狀態管理 ---
-        let userInfo = { company: '', phone: '', address: '', email: '' };
+        let userInfo = { company: '', phone: '', address: '', email: '', remarks: '' };
         let cart = [];
         let currentStep = 1;
         let selectedProduct = null;
@@ -255,7 +275,7 @@
 
         // --- 初始化 (加入深層除錯與強制排毒) ---
         document.addEventListener('DOMContentLoaded', () => {
-            // 【關鍵步驟 1】：強制清除瀏覽器的舊暫存，避免被假資料卡住
+            // 強制清除瀏覽器的舊暫存，避免被假資料卡住
             localStorage.removeItem('yichang_inventory_cache');
             console.log("快取已強制清除！");
 
@@ -263,10 +283,10 @@
             inventoryData = mockInventoryData;
             populateBrands();
 
-            // 【關鍵步驟 2】：開始從 Google Sheets 抓取最新資料
+            // 開始從 Google Sheets 抓取最新資料
             if (API_URL.startsWith('http')) {
                 fetch(API_URL)
-                    .then(response => response.text()) // 這裡改為先抓純文字，防止 Google 傳回登入網頁導致死當
+                    .then(response => response.text()) // 先抓純文字，防止 Google 傳回登入網頁導致死當
                     .then(text => {
                         try {
                             const data = JSON.parse(text); // 嘗試解析成 JSON 資料
@@ -299,14 +319,14 @@
                                     inventoryData = newData; // 成功替換成真實資料
                                     populateBrands(); // 重新整理下拉選單
                                     
-                                    // 【關鍵步驟 3】：成功抓到資料，跳出綠色勾勾提示！
+                                    // 成功抓到資料，跳出綠色勾勾提示！
                                     showModal('連線成功 🎉', `已成功從您的 Google 後台抓取 ${newData.length} 筆最新庫存資料！您可以開始測試了。`, 'success');
                                 }
                             } else {
                                 showModal('試算表空白 (代碼 C)', '已成功連線後台，但「庫存總表」裡面完全沒有填寫水箱資料喔！', 'info');
                             }
                         } catch (e) {
-                            // 【關鍵防呆】如果這裡發生錯誤，代表 Google 傳回的不是資料，而是「要求登入的網頁」！
+                            // 如果發生錯誤，代表 Google 傳回的不是資料，而是「要求登入的網頁」
                             console.error("解析失敗，收到的內容為:", text.substring(0, 150) + "...");
                             showModal('權限設定錯誤 (代碼 E)', 'Google 擋住了連線並要求登入！(回傳了網頁而不是資料)\n\n👉 這 100% 是因為您在部署時沒有設定好權限。\n\n請回到 Apps Script：\n1. 點選「管理部署作業」\n2. 編輯並選擇「新版本」\n3. 【誰可以存取】一定要改成【所有人 (Anyone)】\n4. 點擊部署。', 'warning');
                         }
@@ -664,6 +684,7 @@
             userInfo.phone = document.getElementById('phone').value.trim();
             userInfo.address = document.getElementById('address').value.trim();
             userInfo.email = document.getElementById('email').value.trim();
+            userInfo.remarks = document.getElementById('order-remarks').value.trim(); // 抓取備註
 
             if (!userInfo.company || !userInfo.phone) {
                 showModal('資料不完整', '請先至「首頁」填寫您的保養廠名稱與聯絡電話，以便為您安排出貨！', 'warning');
@@ -750,6 +771,7 @@
                 document.getElementById('phone').value = '';
                 document.getElementById('address').value = '';
                 document.getElementById('email').value = '';
+                document.getElementById('order-remarks').value = ''; // 清空備註
             }, 3000);
         }
 
