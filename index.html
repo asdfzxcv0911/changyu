@@ -204,13 +204,39 @@
                 </button>
             </div>
 
-            <!-- Step 4: 歷史紀錄 -->
-            <div id="step-4" class="fade-in hidden space-y-5 h-full flex flex-col items-center justify-center text-center pb-20 mt-10">
-                <div class="w-20 h-20 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <i class="fa-solid fa-person-digging text-3xl"></i>
+            <!-- Step 4: 歷史紀錄 (全新上線！) -->
+            <div id="step-4" class="fade-in hidden space-y-4 pb-20">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center">
+                        <button onclick="goToStep(1)" class="text-gray-500 hover:text-blue-600 mr-3">
+                            <i class="fa-solid fa-arrow-left text-lg"></i>
+                        </button>
+                        <h2 class="text-xl font-bold border-l-4 border-blue-600 pl-2">歷史叫貨紀錄</h2>
+                    </div>
+                    <button onclick="loadHistory()" class="text-blue-600 hover:text-blue-800 text-sm flex items-center transition active:scale-95">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> 重新整理
+                    </button>
                 </div>
-                <h2 class="text-xl font-bold text-gray-700">歷史紀錄功能開發中</h2>
-                <p class="text-gray-500 text-sm mt-2">未來您將可以在這裡<br>快速查看所有歷史叫貨明細！</p>
+
+                <!-- 載入中畫面 -->
+                <div id="history-loading" class="hidden flex flex-col items-center justify-center py-12">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-4"></i>
+                    <p class="text-gray-500 font-medium">從後台幫您找尋訂單中...</p>
+                </div>
+
+                <!-- 無紀錄畫面 -->
+                <div id="history-empty" class="hidden flex flex-col items-center justify-center text-center py-12">
+                    <div class="w-20 h-20 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mb-4 mx-auto shadow-inner">
+                        <i class="fa-solid fa-box-open text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-700 mb-1">目前還沒有紀錄喔</h3>
+                    <p class="text-gray-500 text-sm">您過去的叫貨明細將會顯示在這裡</p>
+                </div>
+
+                <!-- 歷史紀錄列表容器 -->
+                <div id="history-list" class="space-y-4">
+                    <!-- JS 動態生成歷史卡片 -->
+                </div>
             </div>
 
         </main>
@@ -280,10 +306,9 @@
 
         // --- 初始化 (加入深層除錯與強制排毒) ---
         document.addEventListener('DOMContentLoaded', () => {
-            // 強制清除瀏覽器的舊暫存，避免被假資料卡住 (保留此行以便除錯與抓取新版庫存)
             localStorage.removeItem('yichang_inventory_cache');
 
-            // 【新增功能】：自動載入客人上次填寫的資料 (秒填寫)
+            // 自動載入客人上次填寫的資料
             const savedUserInfo = localStorage.getItem('yichang_user_info');
             if (savedUserInfo) {
                 try {
@@ -297,11 +322,9 @@
                 }
             }
 
-            // 先用模擬資料墊檔，確保畫面絕對有東西顯示
             inventoryData = mockInventoryData;
             populateBrands();
 
-            // 開始從 Google Sheets 抓取最新資料
             if (API_URL.startsWith('http')) {
                 fetch(API_URL)
                     .then(response => response.text()) 
@@ -336,8 +359,6 @@
                                 if (newData.length > 0) {
                                     inventoryData = newData; 
                                     populateBrands(); 
-                                    
-                                    // showModal('連線成功 🎉', `已成功從您的 Google 後台抓取 ${newData.length} 筆最新庫存資料！您可以開始測試了。`, 'success');
                                 }
                             } else {
                                 showModal('試算表空白 (代碼 C)', '已成功連線後台，但「庫存總表」裡面完全沒有填寫水箱資料喔！', 'info');
@@ -356,6 +377,7 @@
 
         // --- UI 控制邏輯 ---
         function goToStep(step) {
+            // 切換分頁前，先確保基本資料有填寫
             if (step > 1) {
                 const company = document.getElementById('company').value.trim();
                 const phone = document.getElementById('phone').value.trim();
@@ -374,14 +396,14 @@
                 }
 
                 userInfo = { company, phone, address, email, remarks };
-                
-                // 【新增功能】：將客人的資料記憶在手機裡，下次打開就不用重打了！
                 localStorage.setItem('yichang_user_info', JSON.stringify({ company, phone, address, email }));
                 
                 document.getElementById('welcome-name').innerText = company;
-                document.getElementById('confirm-company').innerText = company + ' (' + phone + ')';
-                document.getElementById('confirm-address').innerText = address ? address : '(未提供，將以電話聯繫確認)';
-                document.getElementById('confirm-email').innerText = email ? email : '(未提供)';
+                if(document.getElementById('confirm-company')) {
+                    document.getElementById('confirm-company').innerText = company + ' (' + phone + ')';
+                    document.getElementById('confirm-address').innerText = address ? address : '(未提供，將以電話聯繫確認)';
+                    document.getElementById('confirm-email').innerText = email ? email : '(未提供)';
+                }
             }
 
             if (step === 3 && cart.length === 0) {
@@ -389,11 +411,13 @@
                 return;
             }
 
+            // 隱藏所有分頁
             document.getElementById('step-1').classList.add('hidden');
             document.getElementById('step-2').classList.add('hidden');
             document.getElementById('step-3').classList.add('hidden');
             document.getElementById('step-4').classList.add('hidden');
             
+            // 顯示目標分頁
             document.getElementById(`step-${step}`).classList.remove('hidden');
             document.getElementById(`step-${step}`).classList.add('fade-in');
 
@@ -401,6 +425,8 @@
             updateUIElements();
 
             if (step === 3) renderCart();
+            // 💡 如果切換到歷史紀錄，就觸發載入功能
+            if (step === 4) loadHistory();
         }
 
         function updateUIElements() {
@@ -416,6 +442,101 @@
                     }
                 }
             }
+        }
+
+        // --- 歷史紀錄功能 (全新) ---
+        function loadHistory() {
+            const phone = document.getElementById('phone').value.trim();
+            if (!phone) return;
+
+            // 顯示載入中動畫
+            document.getElementById('history-loading').classList.remove('hidden');
+            document.getElementById('history-list').innerHTML = '';
+            document.getElementById('history-empty').classList.add('hidden');
+
+            if (API_URL.startsWith('http') && !API_URL.includes('你的_GAS')) {
+                fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'getHistory', phone: phone })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('history-loading').classList.add('hidden');
+                    if (data.success) {
+                        renderHistory(data.history);
+                    } else {
+                        showModal('查詢失敗', '無法取得歷史紀錄：' + data.error, 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('history-loading').classList.add('hidden');
+                    showModal('連線失敗', '查詢紀錄時發生錯誤，請檢查網路。', 'warning');
+                });
+            } else {
+                // 測試模式假資料
+                setTimeout(() => {
+                    document.getElementById('history-loading').classList.add('hidden');
+                    renderHistory([
+                        { 
+                            orderId: 'ORD-20231025-103000', 
+                            time: '2023/10/25 10:30:00', 
+                            total: 2500, 
+                            items: [
+                                { carInfo: 'TOYOTA ALTIS (2018-2022)', specInfo: '水箱 - 雙排鋁製水箱', price: 2500, qty: 1, subtotal: 2500 }
+                            ] 
+                        }
+                    ]);
+                }, 1000);
+            }
+        }
+
+        function renderHistory(historyData) {
+            const container = document.getElementById('history-list');
+            
+            if (!historyData || historyData.length === 0) {
+                document.getElementById('history-empty').classList.remove('hidden');
+                return;
+            }
+
+            let html = '';
+            historyData.forEach(order => {
+                let itemsHtml = '';
+                order.items.forEach(item => {
+                    itemsHtml += `
+                        <div class="flex justify-between text-sm mb-2 border-b border-gray-100 pb-2 last:border-0 last:pb-0 last:mb-0">
+                            <div class="flex-1 pr-2">
+                                <div class="text-gray-500 text-xs">${item.carInfo}</div>
+                                <div class="font-medium text-gray-800">${item.specInfo}</div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="text-gray-600">${item.qty} 件</div>
+                                <div class="font-bold text-blue-600">$${item.subtotal.toLocaleString()}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4 fade-in">
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-2 mb-3">
+                            <div>
+                                <div class="text-xs text-gray-400 mb-0.5">${order.time}</div>
+                                <div class="text-xs font-mono font-bold text-gray-600">${order.orderId}</div>
+                            </div>
+                            <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">已完成送出</span>
+                        </div>
+                        <div class="space-y-2">
+                            ${itemsHtml}
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+                            <span class="text-sm text-gray-600">總金額</span>
+                            <span class="text-lg font-bold text-red-500">$${order.total.toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
         }
 
         // --- Step 2: 動態下拉選單邏輯 ---
@@ -629,8 +750,6 @@
             showModal('加入成功', `已將 ${qty} 個 ${selectedProduct.spec} 加入清單。`, 'success');
             
             setTimeout(() => {
-                // 💡 修改這裡：不再清空廠牌與車型，只將數量恢復為 1
-                // 這樣客人就可以直接去改「材料種類」繼續加購這台車的其他零件！
                 document.getElementById('order-qty').value = 1;
                 updateUIElements();
             }, 500);
@@ -723,6 +842,7 @@
             document.getElementById('loading-overlay').classList.remove('hidden');
 
             const orderPayload = {
+                action: 'submitOrder', // 🌟 加入識別碼，讓後台知道這是要送出新訂單
                 userInfo: userInfo,
                 cart: cart.map(c => ({
                     id: c.product.id,
@@ -789,8 +909,7 @@
             setTimeout(() => {
                 closeModal();
                 goToStep(1);
-                // 💡 既然已經有記憶功能，送出訂單後就不清空客人的基本資料了，方便他們連續叫貨
-                document.getElementById('order-remarks').value = ''; // 只清空備註
+                document.getElementById('order-remarks').value = ''; 
             }, 3000);
         }
 
