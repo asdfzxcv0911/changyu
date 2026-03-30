@@ -809,16 +809,16 @@
             document.getElementById('total-price').innerText = `$${totalPrice.toLocaleString()}`;
         }
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            updateCartBadges();
-            if (cart.length === 0) {
-                goToStep(2); 
-            } else {
-                renderCart();
-            }
+        // --- Step 2: 動態下拉選單邏輯 ---
+        function getUniqueValues(key, filterFn = () => true) {
+            const uniqueVals = [...new Set(inventoryData.filter(filterFn).map(item => item[key]))];
+            // 🌟 關鍵魔法：加入自然排序 (Natural Sort)
+            // { numeric: true } 讓它懂得分辨數字大小，同時字母自動 A-Z 排列！
+            return uniqueVals.sort((a, b) => String(a).localeCompare(String(b), 'zh-TW', { numeric: true }));
         }
 
+        function populateBrands() {
+            const brands = getUniqueValues('brand');
         // --- 送出訂單 ---
         function submitOrder() {
             userInfo.company = document.getElementById('company').value.trim();
