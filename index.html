@@ -65,16 +65,22 @@
                     開始叫貨 <i class="fa-solid fa-arrow-right ml-1"></i>
                 </button>
 
-                <!-- 新增：服務專員聯絡資訊 -->
+                <!-- 服務專員聯絡資訊 (長輩友善大字體對齊版) -->
                 <div class="mt-8 pt-6 border-t border-gray-100 text-center">
                     <p class="text-xs text-gray-500 mb-3"><i class="fa-solid fa-circle-info mr-1 text-gray-400"></i> 遇到問題或需查詢進度？</p>
-                    <div class="text-sm font-bold text-gray-700 mb-3"><i class="fa-solid fa-headset mr-1 text-blue-600"></i> 服務專員 莊小姐</div>
-                    <div class="flex flex-col space-y-2 px-2">
-                        <a href="tel:073729477" class="w-full inline-flex items-center justify-center bg-blue-50 border border-blue-100 text-blue-700 px-5 py-2.5 rounded-full font-bold shadow-sm hover:bg-blue-100 transition active:scale-95 text-sm">
-                            <i class="fa-solid fa-phone mr-2"></i> 07-3729477
+                    <div class="text-lg font-bold text-gray-700 mb-4"><i class="fa-solid fa-headset mr-1 text-blue-600"></i> 服務專員 莊小姐</div>
+                    <div class="flex flex-col space-y-3 px-2">
+                        <a href="tel:073729477" class="w-full flex items-center justify-center bg-blue-50 border border-blue-100 text-blue-700 py-3.5 rounded-2xl font-bold shadow-sm hover:bg-blue-100 transition active:scale-95 text-xl tracking-wider">
+                            <div class="flex items-center w-[165px] justify-start">
+                                <i class="fa-solid fa-phone mr-3 text-blue-500"></i> 
+                                <span>07-3729477</span>
+                            </div>
                         </a>
-                        <a href="tel:0989251296" class="w-full inline-flex items-center justify-center bg-blue-50 border border-blue-100 text-blue-700 px-5 py-2.5 rounded-full font-bold shadow-sm hover:bg-blue-100 transition active:scale-95 text-sm">
-                            <i class="fa-solid fa-mobile-screen mr-2"></i> 0989-251296
+                        <a href="tel:0989251296" class="w-full flex items-center justify-center bg-blue-50 border border-blue-100 text-blue-700 py-3.5 rounded-2xl font-bold shadow-sm hover:bg-blue-100 transition active:scale-95 text-xl tracking-wider">
+                            <div class="flex items-center w-[165px] justify-start">
+                                <i class="fa-solid fa-phone mr-3 text-blue-500"></i> 
+                                <span>0989251296</span>
+                            </div>
                         </a>
                     </div>
                 </div>
@@ -98,7 +104,6 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">1. 選擇廠牌</label>
                         <select id="select-brand" onchange="onBrandChange()" class="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none">
                             <option value="">請先選擇廠牌...</option>
-                            <!-- JS 動態生成 -->
                         </select>
                     </div>
                     <div>
@@ -188,7 +193,7 @@
                     <p class="text-gray-500"><i class="fa-solid fa-envelope mr-1"></i> 電子信箱：<br><strong id="confirm-email" class="text-gray-700"></strong></p>
                 </div>
 
-                <!-- 新增：備註欄 -->
+                <!-- 備註欄 -->
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2"><i class="fa-solid fa-pen-to-square mr-1 text-gray-400"></i> 訂單備註 (選填)</label>
                     <textarea id="order-remarks" rows="2" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none text-sm" placeholder="有什麼想特別交代的嗎？(例如：請於下午配送、需打統編等)"></textarea>
@@ -275,9 +280,22 @@
 
         // --- 初始化 (加入深層除錯與強制排毒) ---
         document.addEventListener('DOMContentLoaded', () => {
-            // 強制清除瀏覽器的舊暫存，避免被假資料卡住
+            // 強制清除瀏覽器的舊暫存，避免被假資料卡住 (保留此行以便除錯與抓取新版庫存)
             localStorage.removeItem('yichang_inventory_cache');
-            console.log("快取已強制清除！");
+
+            // 【新增功能】：自動載入客人上次填寫的資料 (秒填寫)
+            const savedUserInfo = localStorage.getItem('yichang_user_info');
+            if (savedUserInfo) {
+                try {
+                    const parsedUser = JSON.parse(savedUserInfo);
+                    document.getElementById('company').value = parsedUser.company || '';
+                    document.getElementById('phone').value = parsedUser.phone || '';
+                    document.getElementById('email').value = parsedUser.email || '';
+                    document.getElementById('address').value = parsedUser.address || '';
+                } catch(e) {
+                    console.error("載入客戶自動記憶資料失敗", e);
+                }
+            }
 
             // 先用模擬資料墊檔，確保畫面絕對有東西顯示
             inventoryData = mockInventoryData;
@@ -286,10 +304,10 @@
             // 開始從 Google Sheets 抓取最新資料
             if (API_URL.startsWith('http')) {
                 fetch(API_URL)
-                    .then(response => response.text()) // 先抓純文字，防止 Google 傳回登入網頁導致死當
+                    .then(response => response.text()) 
                     .then(text => {
                         try {
-                            const data = JSON.parse(text); // 嘗試解析成 JSON 資料
+                            const data = JSON.parse(text);
 
                             if (data && data.length > 0 && data[0].error) {
                                 showModal('後台設定錯誤 (代碼 A)', 'Google 試算表回傳錯誤訊息：\n' + data[0].error + '\n\n👉 請檢查試算表底下的分頁名稱是否為「庫存總表」，不能有空白字元！', 'warning');
@@ -316,17 +334,15 @@
                                 }));
                                 
                                 if (newData.length > 0) {
-                                    inventoryData = newData; // 成功替換成真實資料
-                                    populateBrands(); // 重新整理下拉選單
+                                    inventoryData = newData; 
+                                    populateBrands(); 
                                     
-                                    // 成功抓到資料，跳出綠色勾勾提示！
-                                    showModal('連線成功 🎉', `已成功從您的 Google 後台抓取 ${newData.length} 筆最新庫存資料！您可以開始測試了。`, 'success');
+                                    // showModal('連線成功 🎉', `已成功從您的 Google 後台抓取 ${newData.length} 筆最新庫存資料！您可以開始測試了。`, 'success');
                                 }
                             } else {
                                 showModal('試算表空白 (代碼 C)', '已成功連線後台，但「庫存總表」裡面完全沒有填寫水箱資料喔！', 'info');
                             }
                         } catch (e) {
-                            // 如果發生錯誤，代表 Google 傳回的不是資料，而是「要求登入的網頁」
                             console.error("解析失敗，收到的內容為:", text.substring(0, 150) + "...");
                             showModal('權限設定錯誤 (代碼 E)', 'Google 擋住了連線並要求登入！(回傳了網頁而不是資料)\n\n👉 這 100% 是因為您在部署時沒有設定好權限。\n\n請回到 Apps Script：\n1. 點選「管理部署作業」\n2. 編輯並選擇「新版本」\n3. 【誰可以存取】一定要改成【所有人 (Anyone)】\n4. 點擊部署。', 'warning');
                         }
@@ -345,6 +361,7 @@
                 const phone = document.getElementById('phone').value.trim();
                 const address = document.getElementById('address').value.trim();
                 const email = document.getElementById('email').value.trim();
+                const remarks = document.getElementById('order-remarks') ? document.getElementById('order-remarks').value.trim() : '';
 
                 if (!company || !phone) {
                     showModal('資料不完整', '請先在首頁填寫您的「保養廠名稱」與「聯絡電話」，才能開始找水箱與叫貨喔！', 'warning');
@@ -356,7 +373,11 @@
                     return; 
                 }
 
-                userInfo = { company, phone, address, email };
+                userInfo = { company, phone, address, email, remarks };
+                
+                // 【新增功能】：將客人的資料記憶在手機裡，下次打開就不用重打了！
+                localStorage.setItem('yichang_user_info', JSON.stringify({ company, phone, address, email }));
+                
                 document.getElementById('welcome-name').innerText = company;
                 document.getElementById('confirm-company').innerText = company + ' (' + phone + ')';
                 document.getElementById('confirm-address').innerText = address ? address : '(未提供，將以電話聯繫確認)';
@@ -608,8 +629,9 @@
             showModal('加入成功', `已將 ${qty} 個 ${selectedProduct.spec} 加入清單。`, 'success');
             
             setTimeout(() => {
-                document.getElementById('select-brand').value = '';
-                onBrandChange();
+                // 💡 修改這裡：不再清空廠牌與車型，只將數量恢復為 1
+                // 這樣客人就可以直接去改「材料種類」繼續加購這台車的其他零件！
+                document.getElementById('order-qty').value = 1;
                 updateUIElements();
             }, 500);
         }
@@ -684,7 +706,7 @@
             userInfo.phone = document.getElementById('phone').value.trim();
             userInfo.address = document.getElementById('address').value.trim();
             userInfo.email = document.getElementById('email').value.trim();
-            userInfo.remarks = document.getElementById('order-remarks').value.trim(); // 抓取備註
+            userInfo.remarks = document.getElementById('order-remarks').value.trim(); 
 
             if (!userInfo.company || !userInfo.phone) {
                 showModal('資料不完整', '請先至「首頁」填寫您的保養廠名稱與聯絡電話，以便為您安排出貨！', 'warning');
@@ -767,11 +789,8 @@
             setTimeout(() => {
                 closeModal();
                 goToStep(1);
-                document.getElementById('company').value = '';
-                document.getElementById('phone').value = '';
-                document.getElementById('address').value = '';
-                document.getElementById('email').value = '';
-                document.getElementById('order-remarks').value = ''; // 清空備註
+                // 💡 既然已經有記憶功能，送出訂單後就不清空客人的基本資料了，方便他們連續叫貨
+                document.getElementById('order-remarks').value = ''; // 只清空備註
             }, 3000);
         }
 
